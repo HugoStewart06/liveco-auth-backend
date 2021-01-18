@@ -1,4 +1,11 @@
-require('dotenv').config();
+const path = require('path');
+
+const isTest = process.env.NODE_ENV === 'test';
+const envFile = isTest ? '.env.test' : '.env';
+
+require('dotenv').config({
+  path: path.join(__dirname, envFile),
+});
 
 // Feel free to add your own settings,
 // e.g. DB connection settings
