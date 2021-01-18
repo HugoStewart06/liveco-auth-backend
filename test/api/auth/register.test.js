@@ -2,6 +2,15 @@ const request = require('supertest');
 const app = require('../../../app');
 const connection = require('../../../connection');
 
+function testRegister(requestBody, expectedStatus, cb) {
+  request(app)
+    .post('/api/auth/register')
+    .send(requestBody)
+    .set('Accept', 'application/json')
+    .expect('Content-Type', /json/)
+    .expect(expectedStatus, cb);
+}
+
 describe('POST /api/auth/register', () => {
   beforeEach((done) => {
     connection.query('TRUNCATE user', done);
@@ -12,41 +21,38 @@ describe('POST /api/auth/register', () => {
   });
 
   it('send empty payload', (done) => {
-    request(app)
-      .post('/api/auth/register')
-      .send({})
-      .set('Accept', 'application/json')
-      .expect('Content-Type', /json/)
-      .expect(422, done);
+    testRegister({}, 422, done);
   });
 
   it('send email&password but empty', (done) => {
-    request(app)
-      .post('/api/auth/register')
-      .send({ email: '', password: '' })
-      .set('Accept', 'application/json')
-      .expect('Content-Type', /json/)
-      .expect(422, done);
+    testRegister({ email: '', password: '' }, 422, done);
   });
 
   it('send invalid email', (done) => {
-    request(app)
-      .post('/api/auth/register')
-      .send({ email: 'foobar@foobar', password: 'SomePass' })
-      .set('Accept', 'application/json')
-      .expect('Content-Type', /json/)
-      .expect(422, done);
+    testRegister({ email: 'foobar@foobar', password: 'SomePass' }, 422, done);
   });
 
   // tester enregistrement d'email en doublon, censé renvoyer 409
+  it('send sending same email twice', (done) => {
+    testRegister(
+      { email: 'foobar@example.com', password: 'SomePass' },
+      201,
+      () => {
+        testRegister(
+          { email: 'foobar@example.com', password: 'SomePass' },
+          409,
+          done,
+        );
+      },
+    );
+  });
 
   // tester le cas où on envoie les bons champs
   it('send correct fields', (done) => {
-    request(app)
-      .post('/api/auth/register')
-      .send({ email: 'foobar@example.com', password: 'SomePass' })
-      .set('Accept', 'application/json')
-      .expect('Content-Type', /json/)
-      .expect(201, done);
+    testRegister(
+      { email: 'foobar@example.com', password: 'SomePass' },
+      201,
+      done,
+    );
   });
 });
