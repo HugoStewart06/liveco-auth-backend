@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index",
     "start:dev": "nodemon",
-    "test": "mocha test/**/*",
+    "test": "cross-env NODE_ENV=test mocha test/**/*",
     "lint": "eslint --ext .js --fix ."
   },
   "keywords": [],
