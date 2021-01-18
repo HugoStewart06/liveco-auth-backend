@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const isEmail = require('is-email');
 const connection = require('../connection');
 
 const router = express.Router();
@@ -14,6 +15,12 @@ router.post('/api/auth/register', (req, res) => {
   if (!email || !password) {
     return res.status(422).json({
       error: 'email and/or password missing',
+    });
+  }
+
+  if (!isEmail(email)) {
+    return res.status(422).json({
+      error: 'wrong email format',
     });
   }
 

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index",
     "start:dev": "nodemon",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha test/**/*",
     "lint": "eslint --ext .js --fix ."
   },
   "keywords": [],
@@ -16,6 +16,7 @@
     "bcryptjs": "^2.4.3",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "is-email": "^1.0.0",
     "mysql2": "^2.2.5"
   },
   "devDependencies": {
@@ -38,7 +39,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged && npm test"
     }
   }
 }
