@@ -19,7 +19,7 @@ const checkRequiredAuthFields = (req, res, next) => {
     });
   }
   return next();
-}
+};
 
 router.post('/api/auth/register', checkRequiredAuthFields, (req, res) => {
   // 1a. récupérer les infos du body
@@ -69,14 +69,15 @@ router.post('/api/auth/login', checkRequiredAuthFields, (req, res) => {
 
   // vérifier que l'email et le password matchent
   //   1. vérifier qu'un user avec l'email fourni existe
-  const sql = 'SELECT id, password AS hash FROM user WHERE BINARY email = BINARY ?';
+  const sql =
+    'SELECT id, password AS hash FROM user WHERE BINARY email = BINARY ?';
   // éventuellement ajouter BINARY après WHERE
   connection.query(sql, [email], (err, users) => {
     // Pas d'utilisateur trouvé => user inconnu => 401
     if (users.length === 0) {
       // Statut 401 = Unauthorized
       return res.status(401).json({
-        error: 'wrong email or password'
+        error: 'wrong email or password',
       });
     }
 
@@ -84,7 +85,8 @@ router.post('/api/auth/login', checkRequiredAuthFields, (req, res) => {
     const user = users[0];
 
     //   2. comparer le mdp en clair avec le mdp chiffré venant de la BDD
-    bcrypt.compare(password, user.hash, (errBcrypt, passwordsMatch) => {
+    // Ajout d'un return pour être cohérent avec celui de la L.78
+    return bcrypt.compare(password, user.hash, (errBcrypt, passwordsMatch) => {
       if (errBcrypt) {
         return res.status(500).json({ error: 'could not check password' });
       }
@@ -92,29 +94,29 @@ router.post('/api/auth/login', checkRequiredAuthFields, (req, res) => {
       if (!passwordsMatch) {
         // Statut 401 = Unauthorized
         return res.status(401).json({
-          error: 'wrong email or password'
+          error: 'wrong email or password',
         });
       }
 
       // Arrivé ici, on sait que l'email et le password sont corrects
 
       // générer un JWT propre à cet utilisateur (contenant l'id)
-      jwt.sign({ id: user.id }, privateKey, (errToken, token) => {
+      // NOTE : ajout d'un return pour être cohérents avec L.90 et L.95
+      return jwt.sign({ id: user.id }, privateKey, (errToken, token) => {
         if (errToken) {
           return res.status(500).json({ error: 'could not generate token' });
         }
 
         // Arrivé ici (pas d'erreur), on a bien le JWT dans token
-        // envoyer
+        // envoyer le JWT dans un cookie
         res.cookie('token', token, {
-          httpOnly: true
-        })
-        res.json({ id: user.id });
+          httpOnly: true,
+        });
+        // Return la réponse (cohérence avec L.106)
+        return res.json({ id: user.id });
       });
-
     });
   });
-
 });
 
 module.exports = router;
