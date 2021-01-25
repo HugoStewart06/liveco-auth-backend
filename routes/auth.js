@@ -73,6 +73,11 @@ router.post('/api/auth/login', checkRequiredAuthFields, (req, res) => {
     'SELECT id, password AS hash FROM user WHERE BINARY email = BINARY ?';
   // éventuellement ajouter BINARY après WHERE
   connection.query(sql, [email], (err, users) => {
+    if (err) {
+      return res.status(500).json({
+        error: err.message,
+      });
+    }
     // Pas d'utilisateur trouvé => user inconnu => 401
     if (users.length === 0) {
       // Statut 401 = Unauthorized
@@ -102,19 +107,28 @@ router.post('/api/auth/login', checkRequiredAuthFields, (req, res) => {
 
       // générer un JWT propre à cet utilisateur (contenant l'id)
       // NOTE : ajout d'un return pour être cohérents avec L.90 et L.95
-      return jwt.sign({ id: user.id }, privateKey, (errToken, token) => {
-        if (errToken) {
-          return res.status(500).json({ error: 'could not generate token' });
-        }
+      const options = {
+        expiresIn: '1h',
+      };
+      return jwt.sign(
+        { id: user.id },
+        privateKey,
+        options,
+        (errToken, token) => {
+          if (errToken) {
+            return res.status(500).json({ error: 'could not generate token' });
+          }
 
-        // Arrivé ici (pas d'erreur), on a bien le JWT dans token
-        // envoyer le JWT dans un cookie
-        res.cookie('token', token, {
-          httpOnly: true,
-        });
-        // Return la réponse (cohérence avec L.106)
-        return res.json({ id: user.id });
-      });
+          // Arrivé ici (pas d'erreur), on a bien le JWT dans token
+          // envoyer le JWT dans un cookie
+          res.cookie('token', token, {
+            httpOnly: true,
+            maxAge: 3600000,
+          });
+          // Return la réponse (cohérence avec L.106)
+          return res.json({ id: user.id });
+        },
+      );
     });
   });
 });
