@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const connection = require('../connection');
 const { privateKey } = require('../config');
+const cookieCheckMiddleware = require('../middlewares/cookie-check-middleware');
 
 const router = express.Router();
 
@@ -21,7 +22,7 @@ const checkRequiredAuthFields = (req, res, next) => {
   return next();
 };
 
-router.post('/api/auth/register', checkRequiredAuthFields, (req, res) => {
+router.post('/register', checkRequiredAuthFields, (req, res) => {
   // 1a. récupérer les infos du body
   const { email, password } = req.body;
 
@@ -60,7 +61,7 @@ router.post('/api/auth/register', checkRequiredAuthFields, (req, res) => {
   });
 });
 
-router.post('/api/auth/login', checkRequiredAuthFields, (req, res) => {
+router.post('/login', checkRequiredAuthFields, (req, res) => {
   // récupérer des infos depuis req.body
   const { email, password } = req.body;
 
@@ -133,25 +134,8 @@ router.post('/api/auth/login', checkRequiredAuthFields, (req, res) => {
   });
 });
 
-router.get('/api/auth/check', (req, res) => {
-  // On récupère le token (JWT) depuis les cookies
-  const { token } = req.cookies;
-  // Si le token n'est pas présent => erreur 401
-  if (!token) {
-    return res.sendStatus(401);
-  }
-  // Vérifie la validité du JWT : il ne doit pas avoir expiré,
-  // et doit avoir été généré avec notre clé secrète privateKey
-  return jwt.verify(token, privateKey, (err, payload) => {
-    // Si erreur (JWT expiré, signature invalide) => 401
-    if (err) {
-      console.error(err);
-      return res.sendStatus(401);
-    }
-    // Pas d'erreur : le JWT est valide. On renvoie son contenu
-    // (sa payload ou charge utile, contenant ici l'id de l'utilisateur)
-    return res.json(payload);
-  });
+router.get('/check', cookieCheckMiddleware, (req, res) => {
+  res.json(req.user);
 });
 
 module.exports = router;

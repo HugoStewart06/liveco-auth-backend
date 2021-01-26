@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const { port } = require('./config');
 const authRouter = require('./routes/auth');
+const usersRouter = require('./routes/users');
 
 const app = express();
 app.use(morgan('dev'));
@@ -26,7 +27,8 @@ app.use(
     credentials: true,
   }),
 );
-app.use(authRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/users', usersRouter);
 
 app.get('/', (req, res) => res.send('Express server is up and running!'));
 

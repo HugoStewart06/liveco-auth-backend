@@ -3,8 +3,8 @@ POST http://localhost:5000/api/auth/register
 Content-Type: application/json
 
 {
-  "email": "foobar6@example.com",
-  "password": "VerySecure1234"
+  "email": "foobar@example.com",
+  "password": "abc"
 }
 
 ### Authenticate a user
